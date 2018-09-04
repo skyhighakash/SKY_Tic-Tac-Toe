@@ -11,6 +11,8 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Gravity;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.view.View.OnClickListener;
@@ -22,14 +24,14 @@ public class tictack extends AppCompatActivity {
     Button b1,b2,b3,b4,b5,b6,b7,b8,b9,replay,home;
     int draw=0;
     int x,o;
-    boolean cross,isdraw;
+    boolean cross,isdraw,f;
     int blue= Color.parseColor("#3f51b5"),dpbl=Color.parseColor("#ffffff");
     int white= Color.parseColor("#ffffff");
     char a[][]=new char[3][3],winner;
 
     public void ai(char v,char w)
     {
-        if(winner=='\0') {
+        if(winner=='\0'&&f) {
             isdraw = true;
             int c=0,c1=0;
             for (int i = 0; i < 3; i++) {
@@ -70,7 +72,7 @@ public class tictack extends AppCompatActivity {
                     }
                 }
             }
-            if(c==1) {
+            if(isdraw&&c==1) {
                 if (v == 'x' && x > 0) {
                     Toast.makeText(getApplicationContext(), "Player 1 might win", Toast.LENGTH_SHORT).show();
                     isdraw=false;
@@ -79,7 +81,17 @@ public class tictack extends AppCompatActivity {
                     isdraw=false;
                 }
             }
-            else if(c1==1) {
+            if(isdraw&&c>1)
+            {
+                if (v == 'x' && x > 0) {
+                    Toast.makeText(getApplicationContext(), "Player 1 has 100% winning chance", Toast.LENGTH_SHORT).show();
+                    isdraw=false;
+                }else if (v == 'o' && o > 0){
+                    Toast.makeText(getApplicationContext(), "Player 2 has 100% win chance", Toast.LENGTH_SHORT).show();
+                    isdraw=false;
+                }
+            }
+            if(isdraw&&c1==1) {
                 if (w == 'x' && x > 0) {
                     Toast.makeText(getApplicationContext(), "Player 1 might win", Toast.LENGTH_SHORT).show();
                     isdraw=false;
@@ -88,7 +100,7 @@ public class tictack extends AppCompatActivity {
                     isdraw=false;
                 }
             }
-            else if(c1>1)
+            if(isdraw&&c1>1)
             {
                 if (w == 'x' && x > 0) {
                     Toast.makeText(getApplicationContext(), "Player 1 has 100% winning chance", Toast.LENGTH_SHORT).show();
@@ -217,7 +229,8 @@ public class tictack extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tictack);
-
+        Bundle extras = getIntent().getExtras();  //used to share data b/w activities
+        f = extras.getBoolean("ai");
         b1=findViewById(R.id.button);
         b2=(Button)findViewById(R.id.button2);
         b3=(Button)findViewById(R.id.button3);
@@ -247,6 +260,7 @@ public class tictack extends AppCompatActivity {
         b7.setTextSize(40);
         b8.setTextSize(40);
         b9.setTextSize(40);
+
         /*ViewGroup v=(ViewGroup)tst.getView();
         TextView txt=(TextView) v.getChildAt(0);
         txt.setTextSize(25);*/
@@ -301,6 +315,7 @@ public class tictack extends AppCompatActivity {
                             .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int id) {
                                     Intent i = new Intent(getApplicationContext(),tictack.class);
+                                    i.putExtra("ai", f);
                                     finish();
                                     startActivity(i);
                                 }
@@ -317,6 +332,7 @@ public class tictack extends AppCompatActivity {
                 }
                 else {
                     Intent i = new Intent(getApplicationContext(),tictack.class);
+                    i.putExtra("ai", f);
                     finish();
                     startActivity(i);
                 }
@@ -580,6 +596,17 @@ public class tictack extends AppCompatActivity {
         //Toast.makeText(getApplicationContext(),"hi",Toast.LENGTH_LONG).show();
     }
     @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+
+        MenuItem Item = menu.findItem(R.id.ai_switch);
+        // set your desired icon here based on a flag if you like
+        if(f)
+            Item.setIcon(getResources().getDrawable(R.drawable.android_robot_green));
+        else
+            Item.setIcon(getResources().getDrawable(R.drawable.android_robot_white));
+        return super.onPrepareOptionsMenu(menu);
+    }
+    @Override
     public void onBackPressed() {
         if(winner!='x'&&winner!='o'&&draw>0&&draw<9) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -604,5 +631,36 @@ public class tictack extends AppCompatActivity {
             finish();
             startActivity(i);
         }
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.ai_switch:
+                // set your desired icon here based on a flag if you like
+                if(f)
+                {
+                    item.setIcon(getResources().getDrawable(R.drawable.android_robot_white));
+                    f=false;
+                }else {
+                    item.setIcon(getResources().getDrawable(R.drawable.android_robot_green));
+                    f=true;
+                    if(cross)
+                        ai('o','x');
+                    else
+                        ai('x','o');
+                }
+                //Toast.makeText(getApplicationContext(),"cross="+cross,Toast.LENGTH_LONG).show();
+                return true;
+
+
+            default:
+                return super.onOptionsItemSelected(item);
+
+        }
+    }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
     }
 }
